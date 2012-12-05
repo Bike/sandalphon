@@ -1,0 +1,44 @@
+;;;; brainstorming.
+
+Have a type Collection.
+Collections support find, map, reduce, count, length/size (maybe?  may not be a number?), substitute, merge, remove.
+Some kind of grabber function to get an arbitrary element, and remove, would be enough to implement the rest (badly).
+E.g., a linked list could have FIRST as the grabber, and REST as the removed-other, except for circularity.
+Could call the generic grabber/rest CAR and CDR for lulz.
+
+Collections do not have to have a finite size.  Presumably infinite collections could return some distinguished infinite value.
+Or if I let my mathiness get away from me, I could have the whole hierarchy of cardinals!
+Collections would also include things like, say, generators - items don't have to be conceptually "in" the collection, as long as they're somehow accessible.
+
+Set and Multiset are subtypes of Collection.
+
+AddressableCollection is a subtype of Collection.  It adds support for ref, which takes an addr collection and an addr appropriate for it.
+Infinitude considerations again apply; (ref *fib* 90000) is fine, *fib* could even be a function of some sort as long as ref works.
+
+Oh, that reminds me though, what about mutability?  Mutable sets (replace...) and sequences make sense, not so much with *fib*.  Could have a mutability mixin and use multiple inheritance, it would just need to support set-ref or w/e.  Or no, set-first I suppose.
+
+Hash tables obviously go under addressable collections, as do sequences (addressed by a positive number index) and multidimensional arrays (probably with a convenience/efficiency (ref array [...subscripts...]) == (aref array ...subscripts...))
+
+Types.  Obviously a collection of any type can have an associated element-type: a set of integers.  This aids type inference bla bla.  Mostly orthogonal to this, a collection may be more efficient if it's "specialized" on some type.  In Lisp, at least, an (array fixnum) might be able to be stored as just words in memory, with no tag info.  This restricts the element-type to be a subtype of the specialized-type, but that's about it.
+
+Getting "back" on "topic", a subtype of addressable collections for when the keys have an order would be good.  Then you could take subsequences or sub... matrices? for integral/array-of-integer addresses, for instance.
+
+It might make sense to talk about element-types or even specialized-types only between certain addresses, e.g. an array with integers in 0:4 and strings in 5:, but I doubt it would be that important.
+
+Map.  Quick review: map(successor,[4,3,2]) = [5,4,3].  Map in CL is rather more complicated, in that you can provide a return type to be constructed: map(array,successor,[4,3,2]) = #(5 4 3).  Map in Haskell is also more complicated in a different direction, in that it works with functors, so you can do like map(successor,((3 . 2) . ((6 . 4) . 9))) = ((4 . 3) . ((7 . 5) . 10)).  (That's supposed to be a representation of a tree.)  I think it makes sense to combine these together, essentially providing functors for both the input and output.  E.g. you could have map(btree,preorder,successor,[4,3,2]) and get a tree with 4 on top with 3 and 2 as children.  Or in any case I'd like to have haskelly functors; I think they're a great way to express traversal of arbitrary data structures.
+
+this turned out even less organized than I anticipated.  apologies.  any ideas/brainstorming would be great.
+
+back to the real world, here's what I'm going to implement in my weird toy CL:
+* a type COLLECTION, with two optional parameters of an implementation type, an element-type, and a size.
+  * (collection (skiplist integer) (integer 0 19) 17) is the type of collections of integers in the interval [0,19] implemented as a 17-long skiplist specialized to hold integers.
+  * (collection * character) is the type of any collection of characters.
+* a type ADDRESSABLE-COLLECTION, which is basically the same but also with a key type.
+  * (addressable-collection (hash-table fixnum *) (unsigned-byte 16)) is the type of collections in the form of hash tables specialized on fixnum keys; the keys are also known to be 16-bit integers.
+* a type RECTILINEAR (dumb, but ARRAY is taken) for multidimensional arrays, i.e. RECTILINEAR = (ADDRESSABLE-COLLECTION * (ARRAY (INTEGER 0 *))).  And some other one for the special case of one dimension.  and asdufahsrniew
+
+hopefully you get the idea!
+
+oh, more hairiness, CL array types have a number of other properties like whether you can resize them.  and... blurf.
+
+this is kinda sucky, sorry.

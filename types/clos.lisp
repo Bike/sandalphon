@@ -1,0 +1,1 @@
+;;; are classes mutable types?
